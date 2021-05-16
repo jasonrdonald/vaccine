@@ -1,0 +1,680 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Covaxin Availability</title>
+	<meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
+    <style>
+        .available_capacity, .covaxin{
+            background-color: lightgreen;
+        }
+        .notavailable
+        {
+            background-color: lightsalmon;
+        }
+        .tblsessions {
+            text-align: right;
+        }
+
+        #myBtn {
+        display: none; /* Hidden by default */
+        position: fixed; /* Fixed/sticky position */
+        bottom: 20px; /* Place the button at the bottom of the page */
+        right: 30px; /* Place the button 30px from the right */
+        z-index: 99; /* Make sure it does not overlap */
+        border: none; /* Remove borders */
+        outline: none; /* Remove outline */
+        background-color: purple; /* Set a background color */
+        color: white; /* Text color */
+        cursor: pointer; /* Add a mouse pointer on hover */
+        padding: 15px; /* Some padding */
+        border-radius: 10px; /* Rounded corners */
+        font-size: 18px; /* Increase font size */
+        }
+
+        #myBtn:hover {
+        background-color: #555; /* Add a dark-grey background on hover */
+        }
+    </style>
+    </head>
+
+    <body translate="no" >
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+        
+        <div class="container">
+            
+        <div class="page-header">
+          <h1>Vaccine Availability - Covaxin</h1>
+        </div>
+        <div class="alert alert-info">
+            <strong>Info!</strong> Districts neighbouring to chennai are pre-selected for convenience.
+            <br/>* This page filters out Covishield availability by default
+          </div>
+        <button onclick="getCities(geoFindMe);">find location</button>
+        <div id="nearbyStates"></div>
+        <div id="nearbyCities"></div>
+        <div class="row" >
+            <div class="col-lg-12 col-md-8 col-sm-4" id="states">
+                <div class="dropdown">
+                    <select id="ddlStates" class="form-control" onchange="selectStates();">  <option value="" selected disabled hidden>Choose here</option><option value="1">1:Andaman and Nicobar Islands</option><option value="2">2:Andhra Pradesh</option><option value="3" selected="">3:Arunachal Pradesh</option><option value="4">4:Assam</option><option value="5">5:Bihar</option><option value="6">6:Chandigarh</option><option value="7">7:Chhattisgarh</option><option value="8">8:Dadra and Nagar Haveli</option><option value="37">37:Daman and Diu</option><option value="9">9:Delhi</option><option value="10">10:Goa</option><option value="11">11:Gujarat</option><option value="12">12:Haryana</option><option value="13">13:Himachal Pradesh</option><option value="14">14:Jammu and Kashmir</option><option value="15">15:Jharkhand</option><option value="16">16:Karnataka</option><option value="17">17:Kerala</option><option value="18">18:Ladakh</option><option value="19">19:Lakshadweep</option><option value="20">20:Madhya Pradesh</option><option value="21">21:Maharashtra</option><option value="22">22:Manipur</option><option value="23">23:Meghalaya</option><option value="24">24:Mizoram</option><option value="25">25:Nagaland</option><option value="26">26:Odisha</option><option value="27">27:Puducherry</option><option value="28">28:Punjab</option><option value="29">29:Rajasthan</option><option value="30">30:Sikkim</option><option value="31" selected="">31:Tamil Nadu</option><option value="32">32:Telangana</option><option value="33">33:Tripura</option><option value="34">34:Uttar Pradesh</option><option value="35">35:Uttarakhand</option><option value="36">36:West Bengal</option></select>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="preferences" id="preferences" value="save">
+                    <label class="form-check-label" for="preferences">Save as Default</label>
+                </div>
+                <div class="form-group">
+                    <button id="btnDefault" onclick="Reset()" title="Reset controls to default">Reset to default</button>
+                </div>
+            </div>
+        </div>
+                <p>
+                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#districtscollapse" aria-expanded="false" aria-controls="districtscollapse" onclick="toggleDistricts()">Toggle districts</button>
+                </p>
+        <div class="row" >
+            <div class="col-lg-12 col-md-8 col-sm-4">
+                <div class="" id="districtscollapse">
+                    <div class="card card-body" id="districts">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" >
+            <div class="col-lg-12 col-md-8 col-sm-4">
+                <button class="btn btn-primary" id="btnRefresh" onclick="Refresh()" title="Get Cowin data for Vaccine">Get Details</button>
+                <button class="btn btn-secondary" id="btnHighlight" onclick="Highlight()" title="Highlight Centers which have Covaxin">Covaxin Availability</button>
+                <button class="btn btn-secondary"  id="btnFilter" onclick="Filter()" title="Filter out unavailable centers">Filter-out</button>
+                <span class="covaxin">&nbsp;&nbsp; </span> Available in one of the dates at Center
+                <span class="notavailable">&nbsp;&nbsp; </span> Unavailable at Center
+            </div>
+            
+          <div class="col-lg-12 col-md-8 col-sm-4" style="display:none;">
+            <div class="form-group">
+              <label for="data">Data</label>
+              <textarea name="data" id="data" rows="20" class="form-control" ></textarea>
+            </div><!-- form-group -->
+          </div><!-- /col -->
+          
+        </div><!-- /row -->
+        <hr class="my-4">
+        <div  class="row" >
+            <div id="tableGoesHere" class="col-lg-12 col-md-8 col-sm-4" style="overflow-x: scroll;">
+              
+            </div><!-- col -->
+          </div>
+      </div><!-- container -->
+      <button onclick="topFunction()" id="myBtn" title="Go to top">Top</button> 
+        
+          <script>
+              var x = [{
+            "center_id": 620502,
+            "name": "Athipet APHC",
+            "address": "Kalignar Nagar",
+            "state_name": "Tamil Nadu",
+            "district_name": "Tiruvallur",
+            "block_name": "Ponneri",
+            "pincode": 600120,
+            "lat": 13,
+            "long": 80,
+            "from": "09:00:00",
+            "to": "18:00:00",
+            "fee_type": "Free",
+            "sessions": [
+                {
+                    "session_id": "40bbcebd-a80c-47f9-b7f2-19e474d0fe5f",
+                    "date": "15-05-2021",
+                    "available_capacity": 5,
+                    "min_age_limit": 45,
+                    "vaccine": "COVISHIELD",
+                    "slots": [
+                        "09:00AM-11:00AM",
+                        "11:00AM-01:00PM",
+                        "01:00PM-03:00PM",
+                        "03:00PM-06:00PM"
+                    ]
+                },
+                {
+                    "session_id": "a5429f50-f01b-4430-8a1f-8ced59820231",
+                    "date": "16-05-2021",
+                    "available_capacity": 5,
+                    "min_age_limit": 45,
+                    "vaccine": "COVISHIELD",
+                    "slots": [
+                        "09:00AM-11:00AM",
+                        "11:00AM-01:00PM",
+                        "01:00PM-03:00PM",
+                        "03:00PM-06:00PM"
+                    ]
+                },
+                {
+                    "session_id": "58aa012f-4925-4a87-a74f-c81d0bc53ab7",
+                    "date": "17-05-2021",
+                    "available_capacity": 4,
+                    "min_age_limit": 45,
+                    "vaccine": "COVISHIELD",
+                    "slots": [
+                        "09:00AM-11:00AM",
+                        "11:00AM-01:00PM",
+                        "01:00PM-03:00PM",
+                        "03:00PM-06:00PM"
+                    ]
+                }
+            ]
+        }];
+              var expression = jsonata("centers[sessions[vaccine='COVAXIN']]");
+              var xhttp = new XMLHttpRequest(); 
+                function CovaxinQuery(data){
+                    if(data == undefined || data.centers == undefined || data.centers.length == 0)
+                    {
+                        document.getElementById('tableGoesHere').innerHTML += '--No data available in one or more centers--';
+                        return;
+                    }
+
+                    //console.log(data);
+                    //console.log(data.centers);
+                    var result = expression.evaluate(data);
+                    if(result!=undefined && result.length !=undefined)
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        return data.centers;
+                    }
+                    //console.log(resdata);
+                }
+
+            window.onload = function(){
+                //document.getElementsByName("preferences").forEach(x=> x.checked = false);
+                getStates(loadStates);
+                //getDistricts(31, loadDistricts);
+                //selectStates();
+                //initialize();
+            }
+
+            function Reset(){
+                getStates(loadStates);
+            }
+            var states = [];
+            function getStates(onsuccess)
+            {
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        //console.log(this.responseText);
+                        states = JSON.parse(this.responseText).states;
+                        onsuccess(states);
+                        
+                    }
+                };
+                //xhttp.open("GET", "https://cdn-api.co-vin.in/api/v2/admin/location/states", true);
+                xhttp.open("GET", "states.json", true);
+                xhttp.send();
+            }
+
+            function loadStates(data)
+            {
+                var preselect = localStorage.state_id ?? "31";
+                //console.log(data);
+                var statesHTML = '';
+                data.forEach(function(item, index)
+                {
+                    var preselected = '';
+                    if(preselect.indexOf(item.state_id) >= 0)
+                        preselected = 'selected';
+                        statesHTML += '<option value="'+ item.state_id +'" '+ preselected +'>'+item.state_id + ':' + item.state_name +'</option>'; 
+                });
+                document.getElementById("ddlStates").innerHTML = statesHTML;
+                selectStates();
+                //document.getElementById("ddlStates").onchange();
+            }
+
+            async function selectStates()
+            {
+                var e = document.getElementById("ddlStates");
+                //var strUser = e.options[e.selectedIndex].text;
+                var state_id = e.value;
+                //document.querySelectorAll("input[id=ddlStates] :selected")
+
+                await getDistricts(state_id, loadDistricts);                
+                document.getElementById("tableGoesHere").innerHTML = '';
+                document.getElementById('districtscollapse').classList.remove("collapse");
+            }
+            var citiesInSelectedState = [];
+            
+            async function getDistricts(state_id, onsuccess)
+            {
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var response = JSON.parse(this.responseText);
+                        //console.log(response.districts.length);
+                        var districtsQuery = jsonata("districts^(district_id)").evaluate(JSON.parse(this.responseText)); //order by district id
+                        var districts = response.districts.length == 1 ? response.districts : districtsQuery;
+                        citiesInSelectedState = districts;
+                        //console.log(districts);
+                        onsuccess(districts);  
+                    }
+                };
+                xhttp.open("GET", "https://cdn-api.co-vin.in/api/v2/admin/location/districts/" + state_id, true);
+                await xhttp.send();
+            }
+
+            function loadDistricts(data)
+            {
+                var preselect = localStorage.district_ids?.split(',') ?? ["557", "565", "571", "575", "572"];   //split method makes it string array
+
+                var districtsHTML = '';
+                data.forEach(function(item, index)
+                {
+                    var preselected = '';
+                    if(preselect.indexOf(item.district_id.toString()) >= 0) //toString() added since implicit conversion is not happening when checking against string array
+                        preselected = 'checked';
+                        districtsHTML += '&nbsp;<span><input name="district" type="checkbox" data-districtname='+item.district_name+' id="chkCity'+item.district_id+'" value="'+item.district_id+'" '+preselected+'/>'
+                                                                +'<label for="chkCity'+item.district_id+'">'+item.district_id+ ':' +item.district_name+'</label></span>&nbsp;|'; 
+                });
+                document.getElementById("districts").innerHTML = districtsHTML;
+            }
+
+            function getVaccineAvailability(district_id, fdate, onsuccess){
+                xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    onsuccess(JSON.parse(this.responseText));
+                }
+                };
+                xhttp.open("GET", "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id="+district_id+"&date=" + fdate, true);
+                xhttp.send();
+            }
+
+            function toggleDistricts()
+            {
+                if(document.getElementById('districtscollapse').classList.contains('collapse'))
+                    document.getElementById('districtscollapse').classList.remove("collapse");
+                else
+                    document.getElementById('districtscollapse').classList.add("collapse");
+            }
+            
+
+            function loadTable(data)
+            {
+                document.getElementById('districtscollapse').classList.add("collapse");
+                var covaxdata = CovaxinQuery(data);
+                if(covaxdata != undefined)
+                    document.getElementById('tableGoesHere').innerHTML += json2table(covaxdata, 'table');
+                
+                /* Live example */
+                
+                var dom = {
+                    data: document.getElementById('data'),
+                    table: document.getElementById('tableGoesHere') };
+                    dom.data.value = JSON.stringify(covaxdata);
+                    dom.data.addEventListener('input', function () {
+                        dom.table.innerHTML += json2table(JSON.parse(covaxdata), 'table');
+                    });
+            }
+
+            function multipleAjax(districtids, fdate, onsuccess)
+            {
+                var request = new XMLHttpRequest();
+                (function loop(i, length) {
+                    if (i>= length) {
+                        return;
+                    }
+                    var url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=" + districtids[i]+"&date=" + fdate;
+
+                    request.open("GET", url);
+                    request.onreadystatechange = function() {
+                        if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                            var data = JSON.parse(request.responseText);
+                            //console.log('-->' + i + ' id: ' + data._id);
+                            loop(i + 1, length);
+
+                            onsuccess(data);
+                        }
+                    }
+                    request.send();
+                })(0, districtids.length);
+            }
+
+            function  Refresh()
+            {
+                document.getElementById('tableGoesHere').innerHTML = '';
+                var districtSelection = getCheckedCheckboxesFor("district");
+                if(districtSelection.length == 0)
+                {
+                    document.getElementById('tableGoesHere').innerHTML = '--No districts selected--';
+                    return;
+                }
+                //console.log(districtSelection);
+                var today = new Date();
+                var fdate = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
+                multipleAjax(districtSelection, fdate, loadTable);
+                if(document.querySelectorAll('input[name="preferences"]:checked').length == 1)
+                {
+                    localStorage.setItem("district_ids", districtSelection);
+                    var state_id = document.getElementById("ddlStates").value;
+                    localStorage.setItem("state_id", state_id);
+                    document.getElementsByName("preferences").forEach(x=> x.checked = false);
+                }
+            }
+
+
+
+            function getCheckedCheckboxesFor(checkboxName) {
+                var checkboxes = document.querySelectorAll('input[name="' + checkboxName + '"]:checked'), values = [];
+                Array.prototype.forEach.call(checkboxes, function(el) {
+                    values.push(el.value);
+                });
+                return values;
+            }
+
+            function  Filter()
+            {
+                var rowhide = document.querySelectorAll("td[class='rowhide ']");
+                rowhide.forEach(function(item, index){
+                    rowhide[index].parentElement.style.setProperty('display','none');
+                });
+                //Highlight();
+            }
+
+            function  Highlight()
+            {
+                var sessions = document.querySelectorAll("table[class='tblsessions'] tr td tr");
+                sessions.forEach(function(item, index){
+                    var session = item.innerText.split('\t');
+                    var sessionid = session[0];
+                    if(sessionid.toLowerCase() != 'date')
+                    {
+                        var availability = parseInt(session[1]);
+                        var covaxin = session[3];
+                        //console.log(availability+ ":" + covaxin);
+                        if(availability > 0 && covaxin.toLowerCase() == 'covaxin')
+                        {
+                            //item.parentElement.classList.add("covaxin");
+                            item.parentElement.parentElement.parentElement
+                            .parentElement.parentElement.parentElement
+                            .parentElement.parentElement
+                            .classList.add("covaxin");
+                        }
+                        else
+                        {
+                            item.parentElement.parentElement.parentElement
+                            .parentElement.classList.remove();
+                            item.classList.add("notavailable");
+                            
+                        }
+                    }
+                });
+            }
+
+            //Get the button:
+            var mybutton = document.getElementById("myBtn");
+
+            // When the user scrolls down 20px from the top of the document, show the button
+            window.onscroll = function() {scrollFunction()};
+
+            function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+            }
+
+            // When the user clicks on the button, scroll to the top of the document
+            function topFunction() {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+            } 
+
+          </script>
+
+            <script id="rendered-js" >
+      /* The function */
+
+      function isObject(obj)
+        {
+            return obj != null && obj.constructor.name === "Object"
+        }
+
+        function json2tablenoheader(json, classes) {
+            if(json == null || json == undefined || Object == null || Object == undefined)
+            return;
+        var cols = Object.keys(json[0]);
+      
+        var headerRow = '';
+        var bodyRows = '';
+      
+        classes = classes || '';
+      
+        function capitalizeFirstLetter(string) {
+          return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+      
+        cols.map(function (col) {
+          //headerRow += '<th>' + capitalizeFirstLetter(col) + '</th>';
+        });
+      
+        json.map(function (row, i) {
+            bodyRows += '#' + (i+1) + '::';
+
+            cols.map(function (colName) {
+                bodyRows += row[colName];
+            });
+
+            bodyRows += '<br/>';
+        });
+      
+        return '<div class="' +
+        classes +
+        '"><div>' +
+        bodyRows +
+        '</div></div>';
+      }
+      var excludecols = ["session_id", "center_id", "lat", "long", "available_capacity_dose1", "available_capacity_dose2"];
+      function json2table(json, classes) {
+        if(json == null || json == undefined || Object == null || Object == undefined)
+            return;
+        var cols = Object.keys(json[0]);
+        
+        var headerRow = '';
+        var bodyRows = '';
+      
+        classes = classes || '';
+      
+        function capitalizeFirstLetter(string) {
+          return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+      
+        cols.map(function (col) {
+            var isexcluded = '';
+
+
+            if(excludecols.indexOf(col.toLowerCase()) > -1)
+                isexcluded = 'hide';
+            if(cols[0] == 'center_id' && (col.toLowerCase() == 'name' || col.toLowerCase() == 'address' || col.toLowerCase() == 'state_name' 
+                        || col.toLowerCase() == 'district_name' || col.toLowerCase() == 'block_name' || col.toLowerCase() == 'pincode'
+                    ))
+                    {
+                        console.log('generate header : ' + cols[0] + '::' + col.toLowerCase());
+                        if(col.toLowerCase() == 'name')
+                            headerRow += '<th>Center</th>';
+                        //else if(col.toLowerCase() == 'pincode')
+                            //headerRow += '</th>';
+                            
+                    }
+            else
+                headerRow += '<th class="'+ isexcluded +'">' + capitalizeFirstLetter(col) + '</th>';
+        });
+      
+        json.map(function (row) {
+          bodyRows += '<tr>';
+            
+          cols.map(function (colName) {
+            var isexcluded = '';
+            if(excludecols.indexOf(colName.toLowerCase()) > -1)
+                isexcluded = 'hide';
+            if(typeof(row[colName]) != 'object')
+                {   
+                    if(cols[0] == 'center_id' && (colName.toLowerCase() == 'name' || colName.toLowerCase() == 'address' || colName.toLowerCase() == 'state_name' 
+                        || colName.toLowerCase() == 'district_name' || colName.toLowerCase() == 'block_name' || colName.toLowerCase() == 'pincode'
+                    ))
+                    {
+                        console.log('generate rows : ' + cols[0] + '::' + colName.toLowerCase());
+                        if(colName.toLowerCase() == 'name')    //first_column
+                            bodyRows+= '<td class=""><span class="'+ isexcluded +'"><strong>' + colName.toLowerCase() + '</strong>: ' + row[colName] + '</span>';
+                        else if (colName.toLowerCase() == 'pincode')    //last_column
+                            bodyRows+= '<br/><span class="'+ isexcluded +'"><strong>' + colName.toLowerCase() + '</strong>: ' + row[colName] + '</span></td>';
+                        else
+                            bodyRows+= '<br/><span class="'+ isexcluded +'"><strong>' + colName.toLowerCase() + '</strong>: ' + row[colName] + '</span>';
+                    }
+                    else if(cols[0] == 'session_id' && colName.toLowerCase() == 'available_capacity' && row[colName] == 0){
+                        bodyRows+= '<td class="rowhide '+ isexcluded +'">' + row[colName] + '</td>';
+                    }
+                    else if(cols[0] == 'session_id' && colName.toLowerCase() == 'vaccine' && row[colName].toLowerCase() != 'covaxin')
+                    {
+                        bodyRows += '<td class="rowhide '+ isexcluded +'">' + row[colName] + '</td>';
+                    }
+                    else if(cols[0] == 'session_id' && colName.toLowerCase() == 'vaccine' && row[colName].toLowerCase() == 'covaxin'){
+                        bodyRows+= '<td class="covaxin '+ isexcluded +'">' + row[colName] + '</td>';
+                    }
+                    else{
+                        bodyRows += '<td class="'+ colName.toLowerCase() +' '+ isexcluded +'">' + row[colName] + '</td>';
+                    }
+                }
+                else if(colName.toLowerCase() == "sessions"){
+                    
+                    var sessions = json2table(row[colName]);
+                    bodyRows += '<td><table class="tblsessions"><tr><td>' + sessions +'</td></tr></table></td>';
+                }
+                else if(colName.toLowerCase() == "slots"){
+                    //var slots = json2tablenoheader(row[colName]);
+                    var slots = row[colName].length;
+                    bodyRows += '<td '+ isexcluded +'>' + slots +'</td>';
+                }            
+          });
+      
+          bodyRows += '</tr>';
+        });
+
+     
+        return '<table style="max-width:1000px;" class="' +
+        classes +
+        '"><thead><tr>' +
+        headerRow +
+        '</tr></thead><tbody>' +
+        bodyRows +
+        '</tbody></table>';
+        
+      }      
+      
+          </script>
+            
+<script>
+    function geoFindMe() {
+
+            //const status = document.querySelector('#status');
+
+            function success(position) {
+                const latitude  = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                //console.log(position.coords.latitude + '/' + position.coords.longitude)
+                nearbyCities(cities, position.coords.latitude, position.coords.longitude);
+                //status.textContent = `Latitude: ${latitude} Â°, Longitude: ${longitude} Â°`;
+                //var win = window.open (`https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`);
+            }
+    
+            function error() {
+                alert('Unable to retrieve your location');
+            }
+
+            if(!navigator.geolocation) {
+                //status.textContent = 'Geolocation is not supported by your browser';
+            } 
+            else {
+                //status.textContent = 'Locatingâ€¦';
+                navigator.geolocation.getCurrentPosition(success, error);
+            }
+
+        }
+    
+    var cities = [];
+    function getCities(onsuccess)
+    {
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                //console.log(this.responseText);                            
+                //onsuccess(JSON.parse(this.responseText));
+                cities = JSON.parse(this.responseText);
+                onsuccess();
+            }
+        };
+        xhttp.open("GET", "cities.json", true);
+        xhttp.send();
+    }
+    var matchCities = [];
+    var matchStates = [];
+    var matchStateIds = [];
+    function nearbyCities(cities, lat, long)
+    {       
+        document.getElementById('nearbyCities').innerHTML = 'Nearby Location: ' 
+        cities.forEach(city => {
+            if(
+                (parseInt(city.lat) <= parseInt(lat) + 1 &&
+                parseInt(city.lat) >= parseInt(lat) - 1)
+                &&
+                (parseInt(city.lng) <= parseInt(long) + 1 &&
+                parseInt(city.lng) >= parseInt(long) - 1)
+            ){
+                
+                //matchCities.push(city.city + '-' + city.admin_name);
+                //console.log('long:' + city.lng +':' +  long);
+                //console.log(states);
+                states.forEach(state => {
+                    //console.log('state:' + state.state_name +':' +  city.admin_name);
+                    if(state.state_name == city.admin_name)
+                    {
+                        var cityText = "'"+city.city+"'";
+                        //document.getElementById('nearbyStates').innerHTML += "<a id='nearby-"+city.admin_name+"' onclick='chooseMatchingState("+state.state_id+");'>" + city.admin_name +"</a> &nbsp;";
+                        document.getElementById('nearbyCities').innerHTML += "<a id='nearby-"+city.city+"' data-city="+city.city+" data-stateid="+state.state_id+" data-state='"+city.admin_name+"' onclick='chooseMatchingCity(this);'>"+ city.admin_name +':' +  city.city +"</a> &nbsp;";
+                        //matchStates.push(city.admin_name);
+                        //matchStateIds.push(state.state_id);
+                    }
+                });
+            }
+        });
+    }
+
+    function chooseMatchingState(state_id)
+    {
+        document.getElementById('ddlStates').value = state_id;
+        selectStates();
+    }
+
+    function chooseMatchingCity(control)
+    {
+        document.getElementById('ddlStates').value = control.attributes["data-stateid"].value;
+        selectStates();
+        setTimeout(function(){
+                document.querySelectorAll('input[name="district"]').forEach(x=> x.checked=false);
+                document.querySelectorAll('input[name="district"]')
+                .forEach(x =>{ 
+                                if(x.attributes['data-districtname'].value.toLowerCase() == control.attributes["data-city"].value.toLowerCase()) 
+                                {
+                                    //console.log(x);
+                                    x.checked = true;
+                                }
+                            }
+                )}, 500);
+    }
+  </script>
+    </body>
+</html>
