@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Vaccine Passport</title>
+	<meta charset="UTF-8" />
+	<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+	<script>
+		$(document).ready( function(){
+			//alert('tst');
+			var querystring = (new URL(document.location)).searchParams;
+			
+			if(window.location.search != "")
+			{	
+				$("#form").hide();			
+				$("#vp").show();
+				$("#editsection").hide();
+				$("#share").hide();
+				
+				var decoded = atob(querystring.get("qs")).replaceAll('/','"');
+				var decodedJson = JSON.parse(decoded);
+				
+				var vacname = decodedJson.vaccine;
+				var vacdate = decodedJson.vacdate;
+
+				if(vacname != null)
+					$(".vacname1").text(decodedJson.vaccine);
+				if(vacdate != null)
+					$(".vacdate1").text(decodedJson.vacdate);
+							
+				var encoded = btoa(unescape("{/vaccine/:/" + vacname + "/, /vacdate/:/" + vacdate +"/}"));
+				var qrcode = new QRCode(document.getElementById("qrcode"), window.location.origin + "?qs=" + encoded);
+			}
+			else
+			{
+				$("#form").show();
+				$("#vp").hide();
+			}
+			
+			/*if(localStorage.VaccineName != undefined)
+					$("#vacname1").text(localStorage.VaccineName);
+			if(localStorage.VaccineDate != undefined)
+					$("#vacdate1").text(localStorage.VaccineDate);
+					*/
+
+				$("#btnSubmit").click( function(){
+					var vacname = $("#txtVaccine").val();
+					var vacdate = $("#txtDate").val();
+					//var vacdate = $("#txtDate").text();
+					localStorage.setItem("VaccineName", vacname);
+					localStorage.setItem("VaccineDate", vacdate);
+					
+					var encoded = btoa(unescape("{/vaccine/:/" + vacname + "/, /vacdate/:/" + vacdate +"/}"));
+					console.log(encoded);
+					// Simulate an HTTP redirect:
+					//window.location.replace("?qs=" + encoded);
+					if(vacname !=null)
+					{
+						$("#qrcode").html("");
+						$("#form").hide();
+						$("#vp").show();
+						
+						$("#share-link").val(window.location.href + "?qs=" + encoded);
+						$(".vacname1").text(vacname);
+						var qrcode = new QRCode(document.getElementById("qrcode"), window.location.href + "?qs=" + encoded);
+					}
+					if(vacdate != null)
+						$(".vacdate1").text(vacdate);
+				});				
+		
+				//qrcode.clear(); // clear the code.
+				//qrcode.makeCode(window.location.origin);
+
+				$("#edit").click( function(){
+					edit();
+				});
+
+				$("#delete").click( function(){
+					del();
+				});
+
+				
+		});
+
+		var qrcode = new QRCode("test", {
+			text: window.location.origin,
+			width: 128,
+			height: 128,
+			colorDark : "#000000",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H
+		});
+
+		function makeCode () {    
+			var elText = document.getElementById("text");
+			
+			if (!elText.value) {
+				alert("Input a text");
+				elText.focus();
+				return;
+			}
+			
+			qrcode.makeCode(elText.value);
+		}
+
+		function edit(){
+			//window.location.replace("Vaccine.html");
+			$("#form").show();
+			$("#vp").hide();
+		}
+
+		function del(){
+			$("#form").show();
+			$("#vp").hide();
+
+			$("#txtVaccine").val("");
+			$("#txtDate").val("");
+			$(".vacname1").text("");
+			$(".vacdate1").text("");
+		}
+		</script>
+
+
+	<div id="app"></div>
+
+<div class="container">
+	<div class="row">
+		<a href="Scanner.html"><img src="59262-200.png" style="height:20px;" />Scan a Vaccine Passport</a>
+	</div>
+<form id="form" class="navbar-form navbar-left" role="search">
+<div class="row">
+<div class="form-group col-lg-3 col-sm-12 col-md-6">
+	<label>Vaccine Name: </label>
+	<input type="text" class="form-control" placeholder="Vaccine Name" id="txtVaccine" text="" required></input>
+</div>
+</div>
+<div class="row">
+<div class="form-group col-lg-3 col-sm-12 col-md-6">
+	<label>Date of vaccine: </label>
+	<input type="date" class="form-control" placeholder="Vaccine Date" id="txtDate" text=""></input>
+</div>
+</div>
+<div class="row">
+<div class="form-group col-lg-3 col-sm-12 col-md-6">
+	<label>&lt;Proof&gt;: </label>
+	<input type="file" class="form-control" placeholder="Vaccine Proof" id="txtProof" text=""></input>
+</div>
+</div>
+<div>
+	<button type="button" id="btnSubmit" class="btn btn-default navbar-btn">Generate</button>
+</div>
+	
+
+</form>
+<div class="row" id="vp" style="display:none;">
+	<div class="col-lg-3 col-sm-12 col-md-6">
+	<div class="thumbnail"> 
+	<!--<img alt="100%x200" data-src="holder.js/100%x200" style="height: 200px; width: 100%; display: block;" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" data-holder-rendered="true"> -->
+	<div id="qrcode" style="text-align: center;"></div>
+	<div class="caption"> 
+		<h3>Vaccine Passport</h3> 
+		<div class="panel panel-default">
+			<div class="panel-heading">Vaccine Name</div>
+			<div class="panel-body">
+			<p class="vacname1"></p> 
+			</div>			
+			<div class="panel-heading">Vaccine Date</div>
+			<div class="panel-body">
+				<p class="vacdate1"></p>
+			</div>
+			
+		</div>
+		<div id="share">
+			<div style="float:left;"><img src='ClipartKey_380804.png' style='width:20px' /></div>
+			Copy<input type="text" id="share-link" />	
+		</div>
+		<p id="editsection">
+			
+			<button type="button" id="edit" class="btn btn-primary" role="button">Edit</button> 
+			<button type="button" id="delete" class="btn btn-default" role="button">Delete</button>
+		</p>
+		
+	</div> 
+	</div>
+	</div> 
+</div>
+<table class="table">
+	<tr><th>Vaccine</th><th>Date</th><th>Proof</th></tr>
+	<tr><td class="vacname1"></td><td class="vacdate1"></td><td id="vacproof1"></td></tr>
+	<tr><td class="vacname2"></td><td class="vacdate2"></td><td id="vacproof2"></td></tr>
+</table>
+</div>
+</body>
+
+</html>

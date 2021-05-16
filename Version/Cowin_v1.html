@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Covaxin Availability</title>
+	<meta charset="UTF-8" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
+    <style>
+        .available_capacity, .covaxin{
+            background-color: lightgreen;
+        }
+        .notavailable
+        {
+            background-color: lightsalmon;
+        }
+    </style>
+    </head>
+
+    <body translate="no" >
+        
+        <div class="container">
+            
+        <div class="page-header">
+          <h1>Vaccine Availability - Covaxin</h1>
+        </div>
+        <div class="alert alert-info">
+            <strong>Info!</strong> Districts neighbouring to chennai are pre-selected for convenience.
+            <br/>* This page filters out Covishield availability by default
+          </div>
+        <div class="row" >
+            <div class="col-lg-12 col-md-8 col-sm-4" id="districts">
+                
+            </div>
+            <div class="col-lg-12 col-md-8 col-sm-4">
+                <button id="btnRefresh" onclick="Refresh()" title="Get Cowin data for Vaccine">Refresh</button>
+                <button id="btnHighlight" onclick="Highlight()" title="Highlight Centers which have Covaxin">Covaxin Availability</button>
+                <button id="btnFilter" onclick="Filter()" title="Filter out unavailable centers">Filter-out</button>
+                <span class="covaxin">&nbsp;&nbsp; </span> Available in one of the dates at Center
+                <span class="notavailable">&nbsp;&nbsp; </span> Unavailable at Center
+            </div>
+            
+          <div class="col-lg-12 col-md-8 col-sm-4" style="display:none;">
+            <div class="form-group">
+              <label for="data">Data</label>
+              <textarea name="data" id="data" rows="20" class="form-control" ></textarea>
+            </div><!-- form-group -->
+          </div><!-- /col -->
+          
+        </div><!-- /row -->
+        <div>
+            <div id="tableGoesHere">
+              
+            </div><!-- col -->
+          </div>
+      </div><!-- container -->
+     
+        
+          <script>
+              var x = [{
+            "center_id": 620502,
+            "name": "Athipet APHC",
+            "address": "Kalignar Nagar",
+            "state_name": "Tamil Nadu",
+            "district_name": "Tiruvallur",
+            "block_name": "Ponneri",
+            "pincode": 600120,
+            "lat": 13,
+            "long": 80,
+            "from": "09:00:00",
+            "to": "18:00:00",
+            "fee_type": "Free",
+            "sessions": [
+                {
+                    "session_id": "40bbcebd-a80c-47f9-b7f2-19e474d0fe5f",
+                    "date": "15-05-2021",
+                    "available_capacity": 5,
+                    "min_age_limit": 45,
+                    "vaccine": "COVISHIELD",
+                    "slots": [
+                        "09:00AM-11:00AM",
+                        "11:00AM-01:00PM",
+                        "01:00PM-03:00PM",
+                        "03:00PM-06:00PM"
+                    ]
+                },
+                {
+                    "session_id": "a5429f50-f01b-4430-8a1f-8ced59820231",
+                    "date": "16-05-2021",
+                    "available_capacity": 5,
+                    "min_age_limit": 45,
+                    "vaccine": "COVISHIELD",
+                    "slots": [
+                        "09:00AM-11:00AM",
+                        "11:00AM-01:00PM",
+                        "01:00PM-03:00PM",
+                        "03:00PM-06:00PM"
+                    ]
+                },
+                {
+                    "session_id": "58aa012f-4925-4a87-a74f-c81d0bc53ab7",
+                    "date": "17-05-2021",
+                    "available_capacity": 4,
+                    "min_age_limit": 45,
+                    "vaccine": "COVISHIELD",
+                    "slots": [
+                        "09:00AM-11:00AM",
+                        "11:00AM-01:00PM",
+                        "01:00PM-03:00PM",
+                        "03:00PM-06:00PM"
+                    ]
+                }
+            ]
+        }];
+              var expression = jsonata("centers[sessions[vaccine='COVAXIN']]");
+              var xhttp = new XMLHttpRequest(); 
+                function CovaxinQuery(data){
+                    return expression.evaluate(data);
+                    //console.log(resdata);
+                }
+            window.onload = function(){
+                
+                getDistricts(31, loadDistricts);
+               
+            }
+
+            function getDistricts(state_id, onsuccess)
+            {
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        onsuccess(jsonata("districts^(district_id)").evaluate(JSON.parse(this.responseText)));  //order by district id
+                    }
+                };
+                xhttp.open("GET", "https://cdn-api.co-vin.in/api/v2/admin/location/districts/" + state_id, true);
+                xhttp.send();
+            }
+
+            function loadDistricts(data)
+            {
+                var preselect = [557, 565, 571, 575, 572];
+                //console.log(data);
+                var districtsHTML = '';
+                data.forEach(function(item, index)
+                {
+                    var preselected = '';
+                    if(preselect.indexOf(item.district_id) >= 0)
+                        preselected = 'checked';
+                    districtsHTML += '&nbsp;<span><input name="district" type="checkbox" id="chkCity'+item.district_id+'" value="'+item.district_id+'" '+preselected+'/>'
+                                                                +'<label for="chkCity'+item.district_id+'">'+item.district_id+ ':' +item.district_name+'</label></span>&nbsp;|'; 
+                });
+                document.getElementById("districts").innerHTML = districtsHTML;
+            }
+
+            function getVaccineAvailability(district_id, fdate, onsuccess){
+                xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    //document.getElementById("demo").innerHTML = this.responseText;
+                    //console.log(this.responseText);
+                    //loadTable(JSON.parse(this.responseText));
+                    onsuccess(JSON.parse(this.responseText));
+                }
+                };
+                xhttp.open("GET", "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id="+district_id+"&date=" + fdate, true);
+                xhttp.send();
+            }
+
+            
+
+            function loadTable(data)
+            {
+                var covaxdata = CovaxinQuery(data);
+                if(covaxdata.length > 0)
+                    document.getElementById('tableGoesHere').innerHTML += json2table(covaxdata, 'table');
+                
+                /* Live example */
+                
+                var dom = {
+                    data: document.getElementById('data'),
+                    table: document.getElementById('tableGoesHere') };
+                    dom.data.value = JSON.stringify(covaxdata);
+                    dom.data.addEventListener('input', function () {
+                        dom.table.innerHTML += json2table(JSON.parse(covaxdata), 'table');
+                    });
+            }
+
+            function multipleAjax(districtids, fdate, onsuccess)
+            {
+                var request = new XMLHttpRequest();
+                (function loop(i, length) {
+                    if (i>= length) {
+                        return;
+                    }
+                    var url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=" + districtids[i]+"&date=" + fdate;
+
+                    request.open("GET", url);
+                    request.onreadystatechange = function() {
+                        if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                            var data = JSON.parse(request.responseText);
+                            //console.log('-->' + i + ' id: ' + data._id);
+                            loop(i + 1, length);
+
+                            onsuccess(data);
+                        }
+                    }
+                    request.send();
+                })(0, districtids.length);
+            }
+
+            function  Refresh()
+            {
+                document.getElementById('tableGoesHere').innerHTML = '';
+                var districtSelection = getCheckedCheckboxesFor("district");
+                //console.log(districtSelection);
+                multipleAjax(districtSelection, '14-05-2021', loadTable);                
+            }
+
+
+
+            function getCheckedCheckboxesFor(checkboxName) {
+                var checkboxes = document.querySelectorAll('input[name="' + checkboxName + '"]:checked'), values = [];
+                Array.prototype.forEach.call(checkboxes, function(el) {
+                    values.push(el.value);
+                });
+                return values;
+            }
+
+            function  Filter()
+            {
+                var rowhide = document.querySelectorAll("td[class='rowhide']");
+                rowhide.forEach(function(item, index){
+                    rowhide[index].parentElement.style.setProperty('display','none');
+                });
+                Highlight();
+            }
+
+            function  Highlight()
+            {
+                var sessions = document.querySelectorAll("table[class='tblsessions'] tr td tr");
+                sessions.forEach(function(item, index){
+                    var session = item.innerText.split('\t');
+                    var sessionid = session[0];
+                    if(sessionid.toLowerCase() != 'session_id')
+                    {
+                        var availability = parseInt(session[2]);
+                        var covaxin = session[4];
+                        //console.log(availability+ ":" + covaxin);
+                        if(availability > 0 && covaxin.toLowerCase() == 'covaxin')
+                        {
+                            //item.parentElement.classList.add("covaxin");
+                            item.parentElement.parentElement.parentElement
+                            .parentElement.parentElement.parentElement
+                            .parentElement.parentElement
+                            .classList.add("covaxin");
+                        }
+                        else
+                        {
+                            item.parentElement.parentElement.parentElement
+                            .parentElement.classList.remove();
+                            item.classList.add("notavailable");
+                            
+                        }
+                    }
+                });
+            }
+          </script>
+
+            <script id="rendered-js" >
+      /* The function */
+
+      function isObject(obj)
+        {
+            return obj != null && obj.constructor.name === "Object"
+        }
+
+        function json2tablenoheader(json, classes) {
+            if(json == null || json == undefined || Object == null || Object == undefined)
+            return;
+        var cols = Object.keys(json[0]);
+      
+        var headerRow = '';
+        var bodyRows = '';
+      
+        classes = classes || '';
+      
+        function capitalizeFirstLetter(string) {
+          return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+      
+        cols.map(function (col) {
+          //headerRow += '<th>' + capitalizeFirstLetter(col) + '</th>';
+        });
+      
+        json.map(function (row, i) {
+            bodyRows += '#' + (i+1) + '::';
+
+            cols.map(function (colName) {
+                bodyRows += row[colName];
+            });
+
+            bodyRows += '<br/>';
+        });
+      
+        return '<div class="' +
+        classes +
+        '"><div>' +
+        bodyRows +
+        '</div></div>';
+      }
+      
+      function json2table(json, classes) {
+        if(json == null || json == undefined || Object == null || Object == undefined)
+            return;
+        var cols = Object.keys(json[0]);
+      
+        var headerRow = '';
+        var bodyRows = '';
+      
+        classes = classes || '';
+      
+        function capitalizeFirstLetter(string) {
+          return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+      
+        cols.map(function (col) {
+          headerRow += '<th>' + capitalizeFirstLetter(col) + '</th>';
+        });
+      
+        json.map(function (row) {
+          bodyRows += '<tr>';
+            
+          cols.map(function (colName) {
+            if(typeof(row[colName]) != 'object')
+                {   
+                    if(cols[0] == 'session_id' && colName.toLowerCase() == 'available_capacity' && row[colName] == 0){
+                        bodyRows+= '<td class="rowhide">' + row[colName] + '</td>';
+                    }
+                    else if(cols[0] == 'session_id' && colName.toLowerCase() == 'vaccine' && row[colName].toLowerCase() != 'covaxin')
+                    {
+                        bodyRows += '<td class="rowhide">' + row[colName] + '</td>';
+                    }
+                    else if(cols[0] == 'session_id' && colName.toLowerCase() == 'vaccine' && row[colName].toLowerCase() == 'covaxin'){
+                        bodyRows+= '<td class="covaxin">' + row[colName] + '</td>';
+                    }
+                    else{
+                        bodyRows += '<td class='+ colName.toLowerCase() + '>' + row[colName] + '</td>';
+                    }
+                }
+                else if(colName.toLowerCase() == "sessions"){
+                    
+                    var sessions = json2table(row[colName]);
+                    bodyRows += '<td><table class="tblsessions"><tr><td>' + sessions +'</td></tr></table></td>';
+                }
+                else if(colName.toLowerCase() == "slots"){
+                    var slots = json2tablenoheader(row[colName]);
+                    bodyRows += '<td>' + slots +'</td>';
+                }            
+          });
+      
+          bodyRows += '</tr>';
+        });
+
+     
+        return '<table style="max-width:1000px;" class="' +
+        classes +
+        '"><thead><tr>' +
+        headerRow +
+        '</tr></thead><tbody>' +
+        bodyRows +
+        '</tbody></table>';
+        
+      }      
+      
+          </script>
+</html>
+
